@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+numpy
+requests
+psycopg2-binary
+meshio
+h5py
+scipy

@@ -1,0 +1,6 @@
+# Essential packages
+numpy
+
+# API packages
+requests
+fastapi

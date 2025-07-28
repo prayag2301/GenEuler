@@ -1,0 +1,345 @@
+version: '3.8'
+
+services:
+  mesh_service:
+    build:
+      context: ./mesh-service
+    cpus: 32
+    container_name: mesh_service
+    volumes:
+      - ./mesh-service/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8003:8003"
+    environment:
+      - POSTGRES_HOST=mesh_db
+      - POSTGRES_DB=mesh_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=berlin2000
+    networks:
+      - my_network
+    depends_on:
+      mesh_db:
+        condition: service_healthy
+    restart: always
+
+  mesh_db:
+    image: postgres:12
+    container_name: mesh_db
+    restart: always
+    environment:
+      POSTGRES_DB: mesh_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5433:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mesh_db_data:/var/lib/postgresql/data
+
+  fem_service:
+    build:
+      context: ./fem-service
+    cpus: 32
+    container_name: fem_service
+    volumes:
+      - ./fem-service/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8001:8001"
+    environment:
+      - POSTGRES_HOST=fem_db
+      - POSTGRES_DB=fem_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=berlin2000
+    networks:
+      - my_network
+    depends_on:
+      fem_db:
+        condition: service_healthy
+    restart: always
+  
+  fem_db:
+    image: postgres:12
+    container_name: fem_db
+    restart: always
+    environment:
+      POSTGRES_DB: fem_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5434:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - fem_db_data:/var/lib/postgresql/data 
+
+  topology-service:
+    build:
+      context: ./topology-service
+    container_name: topology_service
+    volumes:
+      - ./topology-service/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8002:8002"
+    networks:
+      - my_network
+    depends_on:
+      fem_service:
+        condition: service_started
+    restart: always
+  
+  topology_db:
+    image: postgres:12
+    container_name: topology_db
+    restart: always
+    environment:
+      POSTGRES_DB: topology_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5435:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - topology_db_data:/var/lib/postgresql/data
+
+  reward_service:
+    build:
+      context: ./reward-combined
+    container_name: reward_combined
+    volumes:
+      - ./reward-combined/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8004:8004"
+    environment:
+      - POSTGRES_HOST=reward_db
+      - POSTGRES_DB=reward_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=berlin2000
+    networks:
+      - my_network
+    depends_on:
+      reward_db:
+        condition: service_healthy
+    restart: always
+
+  reward_db:
+    image: postgres:12
+    container_name: reward_db
+    restart: always
+    environment:
+      POSTGRES_DB: reward_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5437:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - reward_db_data:/var/lib/postgresql/data
+  
+  reward_fem_service:
+    build:
+      context: ./reward-fem
+    container_name: reward_fem
+    volumes:
+      - ./reward-fem/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8005:8005"
+    environment:
+      - POSTGRES_HOST=reward_fem_db
+      - POSTGRES_DB=reward_fem_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=berlin2000
+    networks:
+      - my_network
+    depends_on:
+      reward_fem_db:
+        condition: service_healthy
+    restart: always
+
+  reward_fem_db:
+    image: postgres:12
+    container_name: reward_fem_db
+    restart: always
+    environment:
+      POSTGRES_DB: reward_fem_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5438:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - reward_fem_db_data:/var/lib/postgresql/data
+  
+  reward_topology_service:
+    build:
+      context: ./reward-topology
+    container_name: reward_topology
+    volumes:
+      - ./reward-topology/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8006:8006"
+    environment:
+      - POSTGRES_HOST=reward_topology_db
+      - POSTGRES_DB=reward_topology_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=berlin2000
+    networks:
+      - my_network
+    depends_on:
+      reward_service:
+        condition: service_started
+    restart: always
+
+  reward_topology_db:
+    image: postgres:12
+    container_name: reward_topology_db
+    restart: always
+    environment:
+      POSTGRES_DB: reward_topology_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5439:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - reward_topology_db_data:/var/lib/postgresql/data
+
+  pre_processing:
+    build:
+      context: ./pre-processing
+    container_name: pre_processing
+    volumes:
+      - ./pre-processing/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8007:8007"
+    environment:
+      - POSTGRES_HOST=merged_db
+      - POSTGRES_DB=merged_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=berlin2000
+    networks:
+      - my_network
+    depends_on:
+      merged_db:
+        condition: service_healthy
+    restart: always
+
+  merged_db:
+    image: postgres:12
+    container_name: merged_db
+    restart: always
+    environment:
+      POSTGRES_DB: merged_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5440:5432"
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - merged_db_data:/var/lib/postgresql/data
+
+  sac_agent:
+    build: ./sac-agent
+    container_name: sac_agent
+    runtime: nvidia
+    volumes:
+      - ./sac-agent/src:/app/src
+      - shared_assets:/app/src/assets
+    ports:
+      - "8008:8008"
+    environment:
+      - POSTGRES_HOST=sac_db
+      - POSTGRES_DB=sac_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=berlin2000
+      - USE_CUDA=1
+      - NVIDIA_VISIBLE_DEVICES=all
+    networks:
+      - my_network
+    depends_on:
+      sac_db:
+        condition: service_healthy
+    restart: always
+
+  sac_db:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_DB: sac_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: berlin2000
+    ports:
+      - "5441:5432"
+    networks:
+      my_network:
+        aliases:
+          - sac_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - sac_db_data:/var/lib/postgresql/data
+
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  mesh_db_data:
+  fem_db_data:
+  shared_assets:
+  topology_db_data:
+  reward_db_data:
+  reward_fem_db_data:
+  reward_topology_db_data:
+  merged_db_data:
+  sac_db_data:

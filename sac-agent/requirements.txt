@@ -1,0 +1,7 @@
+pyyaml
+requests
+fastapi
+uvicorn
+psycopg2-binary
+numpy<2           # <-- pin NumPy before torch-geometric
+scipy<2           # <-- also pin SciPy

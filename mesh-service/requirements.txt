@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+numpy
+scipy
+mpi4py
+gmsh
+requests
+psycopg2-binary
+tetgen

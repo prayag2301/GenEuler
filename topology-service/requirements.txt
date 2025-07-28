@@ -1,0 +1,7 @@
+pyvista
+numpy
+scipy
+psycopg2-binary
+psycopg2
+requests
+fastapi

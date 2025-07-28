@@ -1,0 +1,8 @@
+numpy
+scipy
+mpi4py
+petsc4py
+fastapi
+uvicorn
+gmsh
+meshio
